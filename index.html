@@ -181,7 +181,19 @@
     </div>
     <h3>📋 Suallar</h3>
     <div id="adminQList"><div class="loading">Yüklənir...</div></div>
-    <button class="btn-primary" style="margin-top:16px" onclick="finishAdmin()">✅ Tamamlandı</button>
+    <button class="btn-outline" style="margin-top:12px" onclick="showAdminLeaderboard()">🏆 Liderboard-a bax</button>
+    <button class="btn-primary" style="margin-top:8px" onclick="finishAdmin()">✅ Tamamlandı</button>
+  </div>
+
+  <!-- ADMİN LİDERBOARD -->
+  <div id="screen-admin-lb" class="screen">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+      <h2>🏆 Liderboard</h2>
+      <button class="btn-outline btn-sm" onclick="goTo('admin')">← Geri</button>
+    </div>
+    <div class="code-badge" id="adminLbBadge"></div>
+    <div id="adminLbContent" style="margin-top:12px"></div>
+    <button class="btn-outline" style="margin-top:12px" onclick="showAdminLeaderboard()">↻ Yenilə</button>
   </div>
 
 </div>
@@ -400,6 +412,25 @@ async function deleteQuestion(id){
   if(!confirm("Bu sualı silmək istəyirsiniz?"))return;
   await sb("questions?id=eq."+id,{method:"DELETE",prefer:"return=minimal"});
   loadAdminQuestions();
+}
+
+async function showAdminLeaderboard(){
+  document.getElementById("adminLbBadge").textContent="📌 "+currentQuizCode;
+  goTo("admin-lb");
+  document.getElementById("adminLbContent").innerHTML="<p class='loading'>Yüklənir...</p>";
+  const lb=await sb("leaderboard?quiz_code=eq."+encodeURIComponent(currentQuizCode)+"&order=score.desc&limit=100")||[];
+  const content=document.getElementById("adminLbContent");
+  content.innerHTML="";
+  if(lb.length===0){content.innerHTML="<p style='text-align:center;color:#999;font-size:14px'>Hələ heç kim oynamamışdır.</p>";return;}
+  const barMax=lb[0].score;
+  const qCount=questions.length||10;
+  lb.forEach((p,i)=>{
+    const pct=barMax>0?(p.score/barMax)*100:0;
+    const div=document.createElement("div"); div.className="lb-row";
+    div.innerHTML=`<div class="lb-top"><div style="display:flex;align-items:center;gap:8px"><span style="font-size:16px;min-width:24px">${i<3?medals[i]:`${i+1}.`}</span><span class="lb-name">${p.name}</span></div><span class="lb-score">${p.score}/${qCount}</span></div>
+    <div class="lb-bar-bg"><div class="lb-bar-fill" style="width:${pct}%;background:${i<3?["#7F77DD","#AFA9EC","#CECBF6"][i]:"#ccc"}"></div></div>`;
+    content.appendChild(div);
+  });
 }
 
 function finishAdmin(){
