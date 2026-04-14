@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="az">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Trivia Quiz</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:system-ui,sans-serif;background:#f5f4ff;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:1rem}
+  #app{background:#fff;border-radius:16px;padding:2rem 1.5rem;width:100%;max-width:500px;box-shadow:0 4px 24px rgba(0,0,0,0.08)}
+  h2{font-size:22px;font-weight:600;color:#1a1a2e;margin-bottom:6px}
+  h3{font-size:17px;font-weight:600;color:#1a1a2e;margin-bottom:12px}
+  p.sub{font-size:14px;color:#666;margin-bottom:20px}
+  input,select{width:100%;padding:10px 14px;font-size:15px;border-radius:8px;border:1.5px solid #ccc;outline:none;font-family:inherit;margin-bottom:8px;transition:border 0.2s}
+  input:focus,select:focus{border-color:#7F77DD}
+  .err{font-size:13px;color:#e24b4a;margin-bottom:8px;min-height:18px}
+  button{font-family:inherit;cursor:pointer;border-radius:10px;font-size:15px;padding:12px;width:100%;margin-top:8px;transition:opacity 0.15s}
+  button:disabled{opacity:0.6;cursor:default}
+  .btn-primary{background:#7F77DD;color:#fff;border:none;font-weight:600}
+  .btn-outline{background:transparent;color:#555;border:1.5px solid #ccc}
+  .btn-sm{padding:6px 12px;font-size:13px;width:auto;margin-top:0;border-radius:8px}
+  .btn-danger{background:#fcebeb;color:#a32d2d;border:1px solid #f09595}
+  .btn-confirm{background:#7F77DD;color:#fff;border:2px solid #7F77DD;font-weight:600;width:auto;padding:10px 32px}
+  .progress-bar{height:6px;background:#eee;border-radius:99px;margin-bottom:20px;overflow:hidden}
+  .progress-fill{height:100%;background:#7F77DD;border-radius:99px;transition:width 0.4s}
+  .top-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+  .badge{background:#EEEDFE;color:#3C3489;padding:3px 10px;border-radius:99px;font-weight:600;font-size:13px}
+  .question-emoji{font-size:32px;margin-bottom:8px;text-align:center}
+  .question-text{font-size:16px;font-weight:600;color:#1a1a2e;text-align:center;line-height:1.5;margin-bottom:20px}
+  .options{display:grid;gap:9px;margin-bottom:16px}
+  .opt{padding:11px 14px;border-radius:10px;border:2px solid #ddd;background:#fff;color:#1a1a2e;font-size:15px;text-align:left;width:100%;transition:all 0.15s;margin-top:0}
+  .opt.selected{border-color:#7F77DD;background:#EEEDFE;color:#3C3489}
+  .opt-label{font-weight:600;font-size:12px;color:#999;margin-right:8px}
+  .opt.selected .opt-label{color:#534AB7}
+  .center{text-align:center}
+  .stats{display:flex;justify-content:space-around;background:#f5f4ff;border-radius:12px;padding:1rem;margin-bottom:16px}
+  .stat-val{font-size:30px;font-weight:700;color:#1a1a2e}
+  .stat-val span{font-size:16px;color:#999;font-weight:400}
+  .stat-lbl{font-size:12px;color:#999}
+  .review-item{margin-bottom:8px;padding:12px 14px;border-radius:10px;display:flex;gap:8px}
+  .review-item.correct{background:#eaf3de;border:0.5px solid #639922}
+  .review-item.wrong{background:#fcebeb;border:0.5px solid #e24b4a}
+  .review-item p{font-size:13px;margin:2px 0}
+  .review-item .qtitle{font-weight:600;color:#1a1a2e;margin-bottom:4px}
+  .correct-ans{color:#3b6d11}
+  .wrong-ans{color:#a32d2d}
+  .lb-row{margin-bottom:12px}
+  .lb-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
+  .lb-name{font-size:15px;color:#1a1a2e}
+  .lb-name.me{color:#534AB7;font-weight:600}
+  .lb-score{font-size:14px;color:#888;font-weight:600}
+  .lb-bar-bg{height:8px;background:#eee;border-radius:99px;overflow:hidden}
+  .lb-bar-fill{height:100%;border-radius:99px;transition:width 0.6s}
+  .screen{display:none}
+  .screen.active{display:block}
+  .big-emoji{font-size:48px;text-align:center;margin-bottom:12px}
+  .admin-q{background:#f9f9f9;border:1px solid #eee;border-radius:10px;padding:12px 14px;margin-bottom:10px}
+  .admin-q-top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+  .admin-q-text{font-size:14px;font-weight:600;color:#1a1a2e;flex:1}
+  .admin-q-opts{font-size:12px;color:#666;margin-top:4px}
+  .admin-q-opts span.correct{color:#3b6d11;font-weight:600}
+  .form-box{background:#f5f4ff;border-radius:12px;padding:16px;margin-bottom:16px}
+  .form-row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .loading{text-align:center;color:#999;font-size:14px;padding:2rem 0}
+  .code-badge{display:inline-block;background:#EEEDFE;color:#3C3489;padding:4px 12px;border-radius:8px;font-weight:600;font-size:14px;margin-bottom:12px}
+  .quiz-list-item{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:#f9f9f9;border:1px solid #eee;border-radius:10px;margin-bottom:8px}
+  .quiz-list-item .code{font-weight:700;color:#534AB7;font-size:15px}
+  .quiz-list-item .info{font-size:13px;color:#666}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- ANA EKRAN -->
+  <div id="screen-home" class="screen active">
+    <div class="big-emoji">🎯</div>
+    <h2 style="text-align:center">Trivia Quiz</h2>
+    <p class="sub" style="text-align:center">Quiz kodunu daxil edib oynayın və ya yeni quiz yaradın</p>
+    <button class="btn-primary" onclick="goTo('join')">🎮 Quizə qoşul</button>
+    <button class="btn-outline" onclick="goTo('admin-home')">⚙️ Quiz yarat / idarə et</button>
+  </div>
+
+  <!-- QUİZƏ QOŞUL -->
+  <div id="screen-join" class="screen">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <h2>🎮 Quizə qoşul</h2>
+      <button class="btn-outline btn-sm" onclick="goTo('home')">← Geri</button>
+    </div>
+    <input type="text" id="joinCode" placeholder="Quiz kodu (məs: BIO101)" style="text-transform:uppercase"/>
+    <input type="text" id="nameInput" placeholder="Ad Soyad"/>
+    <div class="err" id="joinError"></div>
+    <button class="btn-primary" onclick="handleStart()">Oyuna başla →</button>
+  </div>
+
+  <!-- QUIZ EKRANI -->
+  <div id="screen-quiz" class="screen">
+    <div class="top-row">
+      <span id="qCounter" style="font-size:13px;color:#666">Sual 1/10</span>
+      <span class="badge" id="scoreDisplay">⭐ 0</span>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+    <div class="question-emoji" id="qEmoji"></div>
+    <div class="question-text" id="qText"></div>
+    <div class="options" id="optionsContainer"></div>
+    <div class="center" id="confirmArea" style="display:none">
+      <button class="btn-confirm" onclick="handleConfirm()">Növbəti →</button>
+    </div>
+  </div>
+
+  <!-- NƏTİCƏ -->
+  <div id="screen-result" class="screen">
+    <div class="big-emoji" id="resultEmoji">🎉</div>
+    <h2 style="text-align:center" id="resultTitle"></h2>
+    <p class="sub" style="text-align:center" id="resultSub"></p>
+    <div class="stats">
+      <div style="text-align:center"><div class="stat-val" id="rScore"></div><div class="stat-lbl">Bal</div></div>
+      <div style="text-align:center"><div class="stat-val" id="rRank"></div><div class="stat-lbl">Yer</div></div>
+      <div style="text-align:center"><div class="stat-val" id="rTotal"></div><div class="stat-lbl">Oyunçu</div></div>
+    </div>
+    <button class="btn-outline" onclick="toggleReview()" id="reviewBtn">▼ Düzgün/səhv cavablara bax</button>
+    <div id="reviewList" style="display:none;margin-top:10px"></div>
+    <button class="btn-primary" style="margin-top:12px" onclick="showLeaderboard()">🏆 Liderboard-a bax</button>
+    <button class="btn-outline" onclick="goTo('join')">Yenidən oyna</button>
+  </div>
+
+  <!-- LİDERBOARD -->
+  <div id="screen-leaderboard" class="screen">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+      <h2>🏆 Liderboard</h2>
+      <button class="btn-outline btn-sm" onclick="goTo('result')">← Geri</button>
+    </div>
+    <div class="code-badge" id="lbCodeBadge"></div>
+    <div id="lbContent"></div>
+    <button class="btn-outline" style="margin-top:12px" onclick="showLeaderboard()">↻ Yenilə</button>
+  </div>
+
+  <!-- ADMİN ANA -->
+  <div id="screen-admin-home" class="screen">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <h2>⚙️ Quiz idarəsi</h2>
+      <button class="btn-outline btn-sm" onclick="goTo('home')">← Geri</button>
+    </div>
+    <div class="form-box">
+      <h3>➕ Yeni quiz yarat</h3>
+      <input type="text" id="newQuizCode" placeholder="Quiz kodu (məs: BIO101)" style="text-transform:uppercase"/>
+      <input type="password" id="newQuizPass" placeholder="Admin şifrəsi (yalnız siz bilin)"/>
+      <div class="err" id="newQuizErr"></div>
+      <button class="btn-primary" onclick="createQuiz()">Yarat →</button>
+    </div>
+    <h3>📋 Mövcud quizlər</h3>
+    <div id="quizList"><div class="loading">Yüklənir...</div></div>
+  </div>
+
+  <!-- ADMİN SUALLAR -->
+  <div id="screen-admin" class="screen">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+      <h2>⚙️ Admin paneli</h2>
+      <button class="btn-outline btn-sm" onclick="goTo('admin-home')">← Geri</button>
+    </div>
+    <div class="code-badge" id="adminCodeBadge"></div>
+    <div class="form-box" style="margin-top:12px">
+      <h3>➕ Yeni sual əlavə et</h3>
+      <div style="display:flex;gap:8px">
+        <input type="text" id="newEmoji" placeholder="Emoji" style="width:70px;flex-shrink:0"/>
+        <input type="text" id="newQ" placeholder="Sual mətni"/>
+      </div>
+      <div class="form-row">
+        <input type="text" id="newA" placeholder="A variantı"/>
+        <input type="text" id="newB" placeholder="B variantı"/>
+        <input type="text" id="newC" placeholder="C variantı"/>
+        <input type="text" id="newD" placeholder="D variantı"/>
+      </div>
+      <select id="newAnswer">
+        <option value="0">Düzgün cavab: A</option>
+        <option value="1">Düzgün cavab: B</option>
+        <option value="2">Düzgün cavab: C</option>
+        <option value="3">Düzgün cavab: D</option>
+      </select>
+      <button class="btn-primary" onclick="addQuestion()">Əlavə et</button>
+      <div class="err" id="adminErr"></div>
+    </div>
+    <h3>📋 Suallar</h3>
+    <div id="adminQList"><div class="loading">Yüklənir...</div></div>
+    <button class="btn-primary" style="margin-top:16px" onclick="finishAdmin()">✅ Tamamlandı</button>
+  </div>
+
+</div>
+<script>
+const SB_URL="https://kjcbgbgqnmxpymumuubo.supabase.co";
+const SB_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtqY2JnYmdxbm14cHltdW11dWJvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYwMDIzMzAsImV4cCI6MjA5MTU3ODMzMH0.W69INWW0TkfFVI8wyD-gVn0mqZPtrOoFsDe24xQgiAs";
+const medals=["🥇","🥈","🥉"];
+let playerName="",current=0,selected=null,score=0,answers=[],leaderboard=[],questions=[],currentQuizCode="",currentQuizPass="";
+
+async function sb(path,opts={}){
+  const res=await fetch(SB_URL+"/rest/v1/"+path,{
+    headers:{"apikey":SB_KEY,"Authorization":"Bearer "+SB_KEY,"Content-Type":"application/json","Prefer":opts.prefer||""},
+    ...opts
+  });
+  try{return await res.json();}catch{return null;}
+}
+
+function goTo(screen){
+  document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
+  document.getElementById("screen-"+screen).classList.add("active");
+  if(screen==="admin-home") loadQuizList();
+}
+
+// ── QUİZ OYNA ──
+async function handleStart(){
+  const code=document.getElementById("joinCode").value.trim().toUpperCase();
+  const name=document.getElementById("nameInput").value.trim();
+  const err=document.getElementById("joinError");
+  if(!code){err.textContent="Quiz kodunu yazın.";return;}
+  if(!name){err.textContent="Adınızı yazın.";return;}
+  err.textContent="Yüklənir...";
+  const qs=await sb("questions?quiz_code=eq."+encodeURIComponent(code)+"&order=id.asc");
+  if(!qs||qs.length===0){err.textContent="Bu kodla quiz tapılmadı.";return;}
+  err.textContent="";
+  playerName=name; currentQuizCode=code; questions=qs;
+  current=0; selected=null; score=0; answers=[];
+  renderQuestion();
+  goTo("quiz");
+}
+
+function renderQuestion(){
+  const q=questions[current];
+  const opts=[q.option_a,q.option_b,q.option_c,q.option_d];
+  document.getElementById("qCounter").textContent=`Sual ${current+1}/${questions.length}`;
+  document.getElementById("scoreDisplay").textContent=`⭐ ${score}`;
+  document.getElementById("progressFill").style.width=`${(current/questions.length)*100}%`;
+  document.getElementById("qEmoji").textContent=q.emoji||"❓";
+  document.getElementById("qText").textContent=q.question;
+  document.getElementById("confirmArea").style.display="none";
+  selected=null;
+  const c=document.getElementById("optionsContainer");
+  c.innerHTML="";
+  opts.forEach((opt,i)=>{
+    const btn=document.createElement("button");
+    btn.className="opt";
+    btn.innerHTML=`<span class="opt-label">${String.fromCharCode(65+i)}.</span>${opt}`;
+    btn.onclick=()=>{
+      document.querySelectorAll(".opt").forEach(b=>b.classList.remove("selected"));
+      btn.classList.add("selected"); selected=i;
+      document.getElementById("confirmArea").style.display="block";
+    };
+    c.appendChild(btn);
+  });
+}
+
+async function handleConfirm(){
+  if(selected===null)return;
+  if(selected===questions[current].answer) score++;
+  answers.push(selected);
+  if(current+1>=questions.length){
+    showResult();
+    const existing=await sb("leaderboard?quiz_code=eq."+encodeURIComponent(currentQuizCode)+"&name=eq."+encodeURIComponent(playerName)+"&select=id,score");
+    if(existing&&existing.length>0){
+      if(score>existing[0].score) await sb("leaderboard?id=eq."+existing[0].id,{method:"PATCH",prefer:"return=minimal",body:JSON.stringify({score})});
+    } else {
+      await sb("leaderboard",{method:"POST",prefer:"return=minimal",body:JSON.stringify({quiz_code:currentQuizCode,name:playerName,score})});
+    }
+    leaderboard=await sb("leaderboard?quiz_code=eq."+encodeURIComponent(currentQuizCode)+"&order=score.desc&limit=20")||[];
+    document.getElementById("rRank").textContent=(leaderboard.findIndex(p=>p.name.toLowerCase()===playerName.toLowerCase())+1)||"—";
+    document.getElementById("rTotal").textContent=leaderboard.length;
+  } else {
+    current++; renderQuestion();
+  }
+}
+
+function showResult(){
+  const rank=leaderboard.findIndex(p=>p.name.toLowerCase()===playerName.toLowerCase())+1;
+  document.getElementById("resultEmoji").textContent=rank<=3?medals[rank-1]:"🎉";
+  document.getElementById("resultTitle").textContent=`Təbriklər, ${playerName}!`;
+  document.getElementById("resultSub").textContent=rank>0?`Siz ${rank}-ci yersiniz`:"Nəticəniz qeydə alındı";
+  document.getElementById("rScore").innerHTML=`${score}<span>/${questions.length}</span>`;
+  document.getElementById("rRank").textContent=rank||"—";
+  document.getElementById("rTotal").textContent=leaderboard.length;
+  document.getElementById("reviewList").style.display="none";
+  document.getElementById("reviewBtn").textContent="▼ Düzgün/səhv cavablara bax";
+  goTo("result");
+}
+
+function toggleReview(){
+  const list=document.getElementById("reviewList"),btn=document.getElementById("reviewBtn");
+  if(list.style.display==="none"){
+    list.innerHTML="";
+    questions.forEach((qq,i)=>{
+      const opts=[qq.option_a,qq.option_b,qq.option_c,qq.option_d],chosen=answers[i],correct=chosen===qq.answer;
+      const div=document.createElement("div");
+      div.className=`review-item ${correct?"correct":"wrong"}`;
+      div.innerHTML=`<span style="font-size:16px">${correct?"✅":"❌"}</span>
+        <div><p class="qtitle">${qq.emoji||"❓"} ${qq.question}</p>
+        ${correct?`<p class="correct-ans">Düzgün: ${opts[qq.answer]}</p>`:`<p class="wrong-ans">Sizin cavab: ${opts[chosen]}</p><p class="correct-ans">Düzgün cavab: ${opts[qq.answer]}</p>`}</div>`;
+      list.appendChild(div);
+    });
+    list.style.display="block"; btn.textContent="▲ Bağla";
+  } else {list.style.display="none"; btn.textContent="▼ Düzgün/səhv cavablara bax";}
+}
+
+async function showLeaderboard(){
+  document.getElementById("lbCodeBadge").textContent="📌 "+currentQuizCode;
+  goTo("leaderboard");
+  document.getElementById("lbContent").innerHTML="<p class='loading'>Yüklənir...</p>";
+  leaderboard=await sb("leaderboard?quiz_code=eq."+encodeURIComponent(currentQuizCode)+"&order=score.desc&limit=20")||[];
+  const content=document.getElementById("lbContent");
+  content.innerHTML="";
+  if(leaderboard.length===0){content.innerHTML="<p style='text-align:center;color:#999;font-size:14px'>Hələ heç kim oynamamışdır.</p>";return;}
+  const barMax=leaderboard[0].score;
+  leaderboard.forEach((p,i)=>{
+    const isMe=p.name.toLowerCase()===playerName.toLowerCase(),pct=barMax>0?(p.score/barMax)*100:0;
+    const div=document.createElement("div"); div.className="lb-row";
+    div.innerHTML=`<div class="lb-top"><div style="display:flex;align-items:center;gap:8px"><span style="font-size:16px;min-width:24px">${i<3?medals[i]:`${i+1}.`}</span><span class="lb-name ${isMe?"me":""}">${p.name}${isMe?" (siz)":""}</span></div><span class="lb-score">${p.score}/${questions.length}</span></div>
+    <div class="lb-bar-bg"><div class="lb-bar-fill" style="width:${pct}%;background:${i<3?["#7F77DD","#AFA9EC","#CECBF6"][i]:"#ccc"}"></div></div>`;
+    content.appendChild(div);
+  });
+}
+
+// ── ADMİN ──
+async function loadQuizList(){
+  const list=document.getElementById("quizList");
+  list.innerHTML="<div class='loading'>Yüklənir...</div>";
+  const data=await sb("questions?select=quiz_code&order=quiz_code.asc")||[];
+  const codes=[...new Set(data.map(q=>q.quiz_code))];
+  list.innerHTML="";
+  if(codes.length===0){list.innerHTML="<p style='color:#999;font-size:14px'>Hələ quiz yoxdur.</p>";return;}
+  codes.forEach(code=>{
+    const count=data.filter(q=>q.quiz_code===code).length;
+    const div=document.createElement("div"); div.className="quiz-list-item";
+    div.innerHTML=`<div><div class="code">${code}</div><div class="info">${count} sual</div></div>
+    <button class="btn-sm btn-primary" onclick="verifyAndOpenAdmin('${code}')">İdarə et →</button>`;
+    list.appendChild(div);
+  });
+}
+
+async function createQuiz(){
+  const code=document.getElementById("newQuizCode").value.trim().toUpperCase();
+  const pass=document.getElementById("newQuizPass").value.trim();
+  const err=document.getElementById("newQuizErr");
+  if(!code){err.textContent="Quiz kodu yazın.";return;}
+  if(!pass){err.textContent="Admin şifrəsi yazın.";return;}
+  err.textContent="";
+  currentQuizCode=code;
+  currentQuizPass=pass;
+  document.getElementById("adminCodeBadge").textContent="📌 "+code;
+  goTo("admin");
+  loadAdminQuestions();
+}
+
+async function verifyAndOpenAdmin(code){
+  const qs=await sb("questions?quiz_code=eq."+encodeURIComponent(code)+"&select=password&limit=1");
+  if(!qs||qs.length===0){alert("Bu kodla quiz tapılmadı.");return;}
+  const savedPass=qs[0].password||"";
+  if(savedPass===""){
+    currentQuizCode=code; currentQuizPass="";
+    document.getElementById("adminCodeBadge").textContent="📌 "+code;
+    goTo("admin"); loadAdminQuestions();
+  } else {
+    const entered=prompt("🔐 Admin şifrəsini daxil edin:");
+    if(entered===null)return;
+    if(entered!==savedPass){alert("❌ Şifrə yanlışdır!");return;}
+    currentQuizCode=code; currentQuizPass=savedPass;
+    document.getElementById("adminCodeBadge").textContent="📌 "+code;
+    goTo("admin"); loadAdminQuestions();
+  }
+}
+
+async function loadAdminQuestions(){
+  const list=document.getElementById("adminQList");
+  list.innerHTML="<div class='loading'>Yüklənir...</div>";
+  const qs=await sb("questions?quiz_code=eq."+encodeURIComponent(currentQuizCode)+"&order=id.asc")||[];
+  list.innerHTML="";
+  if(qs.length===0){list.innerHTML="<p style='color:#999;font-size:14px'>Hələ sual yoxdur. Yuxarıdan əlavə edin.</p>";return;}
+  qs.forEach(q=>{
+    const opts=[q.option_a,q.option_b,q.option_c,q.option_d];
+    const div=document.createElement("div"); div.className="admin-q";
+    div.innerHTML=`<div class="admin-q-top"><div style="flex:1"><div class="admin-q-text">${q.emoji||"❓"} ${q.question}</div>
+    <div class="admin-q-opts">${opts.map((o,i)=>`<span class="${i===q.answer?"correct":""}">${String.fromCharCode(65+i)}: ${o}</span>`).join(" · ")}</div></div>
+    <button class="btn-sm btn-danger" onclick="deleteQuestion(${q.id})">Sil</button></div>`;
+    list.appendChild(div);
+  });
+}
+
+async function addQuestion(){
+  const emoji=document.getElementById("newEmoji").value.trim()||"❓";
+  const question=document.getElementById("newQ").value.trim();
+  const a=document.getElementById("newA").value.trim();
+  const b=document.getElementById("newB").value.trim();
+  const c=document.getElementById("newC").value.trim();
+  const d=document.getElementById("newD").value.trim();
+  const answer=parseInt(document.getElementById("newAnswer").value);
+  const err=document.getElementById("adminErr");
+  if(!question||!a||!b||!c||!d){err.textContent="Bütün xanaları doldurun.";return;}
+  err.textContent="";
+  await sb("questions",{method:"POST",prefer:"return=minimal",body:JSON.stringify({quiz_code:currentQuizCode,question,option_a:a,option_b:b,option_c:c,option_d:d,answer,emoji,password:currentQuizPass})});
+  ["newQ","newA","newB","newC","newD","newEmoji"].forEach(id=>document.getElementById(id).value="");
+  loadAdminQuestions();
+}
+
+async function deleteQuestion(id){
+  if(!confirm("Bu sualı silmək istəyirsiniz?"))return;
+  await sb("questions?id=eq."+id,{method:"DELETE",prefer:"return=minimal"});
+  loadAdminQuestions();
+}
+
+function finishAdmin(){
+  const count=document.getElementById("adminQList").querySelectorAll(".admin-q").length;
+  alert(`✅ Quiz tamamlandı! "${currentQuizCode}" kodu ilə ${count} sual yaradıldı.\n\nŞagirdlər bu kodu yazıb oynaya bilər.`);
+  goTo("home");
+}
+
+document.getElementById("joinCode").addEventListener("input",function(){this.value=this.value.toUpperCase()});
+document.getElementById("nameInput").addEventListener("keydown",e=>{if(e.key==="Enter")handleStart()});
+
+// Supabase-i oyandır və aktiv saxla
+sb("questions?select=id&limit=1");
+setInterval(()=>sb("questions?select=id&limit=1"), 9*60*1000);
+</script>
+</body>
+</html>
